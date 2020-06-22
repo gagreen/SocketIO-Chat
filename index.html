@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Socket.io Chat Example</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h3>Socket.io Chat Example</h3>
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="msgForm">Message: </label>
+                <input type="text" class="form-control" id="msgForm">
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+        <div id="chatLogs"></div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script>
+        // socket.io 서버에 접속
+        $(function(){
+            var socket = io.connect('http://localhost:3000');
+
+            // 서버에 본인의 정보 전송
+            socket.emit('login', {
+                name: makeRandomName(),
+                userid: "minsang6088@naver.com"
+            });
+
+            // 서버에게 로그인 메시지 수신받음
+            socket.on('login', (data) => {
+                const chatLogs = document.querySelector('#chatLogs');
+                const div = document.createElement('div');
+                const strong = document.createElement('strong');
+
+                strong.innerHTML = " has joined";
+
+                div.innerHTML = data;
+                div.appendChild(strong);
+
+                chatLogs.appendChild(div);
+            });
+
+            // 서버에게 메시지 수신
+            socket.on('chat', (data) => {
+                const chatLogs = document.querySelector('#chatLogs');
+                const div = document.createElement('div');
+                const strong = document.createElement('strong');
+
+                strong.innerHTML = data.form.name;
+                div.appendChild(strong);
+                div.innerHTML += ": " + data.msg;
+
+                chatLogs.appendChild(div);
+            });
+
+            // Send 이벤트
+            const form = document.querySelector('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                var $msgForm = document.querySelector('#msgForm');
+
+                socket.emit('chat', {msg: $msgForm.value});
+                $msgForm.value = "";
+            });
+
+            function makeRandomName() {
+                let name = "";
+                let possible = "abcdefghijklmnopqrstuvwxyz";
+                for(let i=0; i<3; i++) {
+                    name += possible.charAt(Math.floor(Math.random() * possible.length));
+                }
+
+                return name;
+            }
+        });
+    </script>
+</body>
+</html>
